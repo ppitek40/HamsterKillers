@@ -103,7 +103,7 @@ def main():
                     dest = [x[1] for x in LostTasks if x[0] == data]
                     comm.send([data, 1], dest=dest, tag=tags.ZEZWOLENIA_INNE)
             # SPRAWDZIC CZY NA PEWNO JEST GIT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+            #TEST
             elif tag == tags.AGRAFKA_ZAPYTANIE:
                 print(tag)
             elif tag == tags.AGRAFKA_ZEZWOLENIE:
