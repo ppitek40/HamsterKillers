@@ -36,11 +36,17 @@ def chooseTask(tasks):
     return -1
 
 
-def war():
-    raise NotImplemented()
+def war(myTime, oponnentTime, myID, oponnentID):
+    if myTime != oponnentTime:
+        return True if myTime > oponnentTime else False
+    return True if myID < oponnentID else False
 
 
 def askForSafetyPin():
+    pass
+
+
+def takePoisonAndKillHamsters():
     pass
 
 
@@ -50,6 +56,7 @@ def main():
     status = MPI.Status()
     numberOfSessions = 2
     session = 1
+    numberOfSafetyPins = 5
     comm = MPI.COMM_WORLD
     size = comm.Get_size()
     rank = comm.Get_rank()
@@ -58,38 +65,57 @@ def main():
     if rank == 0:
 
         tasks = generateTasks()
+        doneTasks = 0
         print(tasks)
         sendToAll(comm, rank, size, tasks, tags.ZLECENIA)
 
         # wait4Answers
 
-        data = {'a': 7, 'b': 3.14}
-        comm.send(data, dest=1, tag=tags.ZLECENIE_ZAPYTANIE)
-        comm.send(data, dest=2, tag=tags.ZLECENIE_ZEZWOLENIE)
-        comm.send(data, dest=3, tag=tags.ZLECENIA)
+        while doneTasks < len(tasks):
+            data = comm.recv(dest=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+            if status.Get_tag() == tags.KONIEC:
+                doneTasks += 1
+
         sendToAll(comm, rank, size, 0, tags.KONIEC)
 
         session += 1
 
-
-    elif rank != 0:
+    else:
         tasks = None
         currentTask = None
         LostTasks = []
+        time = 0
+        timeOfTaskRequest = 0
+        timeOfSafetyPinRequest = 0
         numberOfConsents = 0
+        wantSafetyPin = False
+        SafetyPinRequests = []
         end = False
+
         while not end:
 
             data = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+            time = max(time, data[-1]) + 1
             tag = status.Get_tag()
+
             if tag == tags.ZLECENIE_ZAPYTANIE:
                 if currentTask == data:
-                    war()
+                    if war(timeOfTaskRequest, data[-1], rank, status.Get_source()):
+                        continue
+                    task = chooseTask(tasks)
+                    if task < 0:
+                        continue
+                    currentTask = task
+                    time += 1
+                    timeOfTaskRequest = time
+                    numberOfConsents=0
+                    sendToAll(comm, rank, size, task, tags.ZLECENIE_ZAPYTANIE)
+
                 if tasks[data][1]:
                     continue
                 tasks[data][1] = True
-                comm.send(data, dest=status.Get_source(), tag=tags.ZLECENIE_ZEZWOLENIE)
-
+                time += 1
+                comm.send([data, time], dest=status.Get_source(), tag=tags.ZLECENIE_ZEZWOLENIE)
 
             elif tag == tags.ZLECENIE_ZEZWOLENIE:
                 if data == currentTask:
@@ -98,16 +124,42 @@ def main():
                         continue
                     else:
                         tasks[currentTask][1] = True
+                        wantSafetyPin = True
+                        numberOfConsents = 0
+                        time += 1
+                        timeOfSafetyPinRequest = time
                         sendToAll(comm, rank, size, 1, tags.AGRAFKA_ZAPYTANIE)
                 else:
                     dest = [x[1] for x in LostTasks if x[0] == data]
-                    comm.send([data, 1], dest=dest, tag=tags.ZEZWOLENIA_INNE)
+                    time += 1
+                    comm.send([data, 1, time], dest=dest, tag=tags.ZEZWOLENIA_INNE)
             # SPRAWDZIC CZY NA PEWNO JEST GIT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            #TEST
+            # TEST
             elif tag == tags.AGRAFKA_ZAPYTANIE:
-                print(tag)
+                if wantSafetyPin:
+                    if war(timeOfSafetyPinRequest, data[-1], rank, status.Get_source()):
+                        SafetyPinRequests.append(status.Get_source())
+                    else:
+                        time+=1
+                        comm.send([1,time], dest=status.Get_source(), tag=tags.AGRAFKA_ZEZWOLENIE)
+                else:
+                    time += 1
+                    comm.send([1,time], dest=status.Get_source(), tag=tags.AGRAFKA_ZEZWOLENIE)
+
             elif tag == tags.AGRAFKA_ZEZWOLENIE:
-                print(tag)
+                if not wantSafetyPin:
+                    continue
+                numberOfConsents += 1
+                if numberOfConsents < (size - 1) - numberOfSafetyPins:
+                    continue
+                time += 1
+                numberOfConsents = 0
+                takePoisonAndKillHamsters()
+                time+=1
+                for x in SafetyPinRequests:
+                    comm.send([1,time], dest=x,tag=tags.AGRAFKA_ZEZWOLENIE)
+
+
             elif tag == tags.ZEZWOLENIA_INNE:
                 if data[0] == currentTask:
                     numberOfConsents += 1
@@ -115,10 +167,15 @@ def main():
                         continue
                     else:
                         tasks[currentTask][1] = True
-                        sendToAll(comm, rank, size, 1, tags.AGRAFKA_ZAPYTANIE)
+                        wantSafetyPin = True
+                        numberOfConsents = 0
+                        time += 1
+                        timeOfSafetyPinRequest = time
+                        sendToAll(comm, rank, size, [1,time], tags.AGRAFKA_ZAPYTANIE)
                 else:
                     dest = [x[1] for x in LostTasks if x[0] == data]
-                    comm.send([data, 1], dest=dest, tag=tags.ZEZWOLENIA_INNE)
+                    time += 1
+                    comm.send([data, 1, time], dest=dest, tag=tags.ZEZWOLENIA_INNE)
             # POPRAWIC!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
             elif tag == tags.ZLECENIA:
@@ -127,7 +184,10 @@ def main():
                 if task < 0:
                     continue
                 currentTask = task
-                sendToAll(comm, rank, size, task, tags.ZLECENIE_ZAPYTANIE)
+                time += 1
+                timeOfTaskRequest = time
+                numberOfConsents=0
+                sendToAll(comm, rank, size, [task, time], tags.ZLECENIE_ZAPYTANIE)
 
             elif tag == tags.KONIEC:
                 end = True
