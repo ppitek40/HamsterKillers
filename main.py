@@ -1,10 +1,11 @@
-import codecs
 import random
-import sys
+from Logger import Logger
 
 from enum import Enum
 from mpi4py import MPI
-import pydevd_pycharm
+
+
+# import pydevd_pycharm
 
 
 class Tags(Enum):
@@ -15,82 +16,7 @@ class Tags(Enum):
     AGRAFKA_ZEZWOLENIE = 5
     ZEZWOLENIA_INNE = 6
     KONIEC = 7
-
-
-def Logger(logType, args):
-    if logType == 0:
-        print('ID:' + str(args[0]) + ' | 0 | Wyslalem do wszystkich liste zlecen', flush=True)
-    elif logType == 1:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Otrzymalem wiadomosc typu: ' + args[2] + ' od procesu ID: '
-              + str(args[3]) + ' | czas wyslania: ' + str(args[4]), flush=True)
-    elif logType == 2:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Aktualizacja czasu', flush=True, )
-    elif logType == 3:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Wygrałem wojnę o zadanie ' + str(args[2]) +
-              ' z procesem o ID: ' + str(args[3]), flush=True, )
-    elif logType == 4:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Przegrałem wojnę o zadanie ' + str(args[2]) +
-              ' z procesem o ID: ' + str(args[3]) + ' | Przesylam posiadana liczbe zgod: ' + str(args[4]), flush=True)
-    elif logType == 5:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Wybralem zadanie nr ' + str(args[2]) +
-              ' i wysylam wiadomosc typu: ' + args[3] + ' do wszystkich procesow ', flush=True)
-    elif logType == 6:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Ignoruje zapytanie, gdyz ktos już otrzymal moja zgode', flush=True)
-    elif logType == 7:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Wysylam zgode na zadanie ' + str(args[2]) +
-              ' procesowi o ID: ' + str(args[3]), flush=True)
-    elif logType == 8:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Liczba posiadanych zgód ' + str(args[2]), flush=True)
-    elif logType == 9:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Zdobyłem dostęp do zadania nr ' + str(args[2]) +
-              ' | Ubiegam się o agrafkę ', flush=True)
-    elif logType == 10:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Otrzymałem zezwolenie do zadania nr ' + str(args[2]) +
-              ' | Przegrałem walke o nie, więc przesyłam zgode do procesu o ID' + str(args[3]), flush=True)
-    elif logType == 11:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Wygralem walkę o agrafke z procesem o ID ' + str(args[2]) +
-              ' | Zapisuje jego ID, aby wyrazic zgode po skorzystaniu z agrafki', flush=True)
-    elif logType == 12:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Przegralem walkę o agrafke z procesem o ID ' + str(args[2]) +
-              ' | Przesylam mu zgode', flush=True)
-    elif logType == 13:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Przesylam zgode na agrafke do procesu o ID ' + str(args[2]), flush=True)
-    elif logType == 14:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Zdobywam agrafke ', flush=True)
-    elif logType == 15:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Przesylam zgode na agrafke do procesu o ID ' + str(args[2]), flush=True)
-    elif logType == 16:
-        print('ID:0 | 0 | Otrzymalem informacje ze zadanie ' + str(
-            args[0]) + ' zostalo zrealizowane | Pozostalo zadan: ' + str(args[1]), flush=True)
-    elif logType == 17:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) + ' | Nie potrzebuje juz agrafki, wiec ignoruje zezwolenie',
-              flush=True)
-    elif logType == 18:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Pobieram ' + str(args[2]) + ' sztuk trucizny do zadania nr: '+ str(args[3]),
-              flush=True)
-    elif logType == 19:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Rozpoczynam zabijanie ' + str(args[2]) + ' chomików',
-              flush=True)
-    elif logType == 20:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) + ' | Zrealizowalem zadanie  nr: '+ str(args[2]),
-              flush=True)
+    KONIEC_SESJI = 8
 
 
 def generateTasks():
@@ -136,8 +62,8 @@ def askForSafetyPin(comm, time):
 
 def takePoisonAndKillHamsters(time, currentTask, hamstersToKill, comm):
     time += 1
-    Logger(18, [comm.Get_rank(), time, hamstersToKill, currentTask])
-    Logger(19, [comm.Get_rank(), time, hamstersToKill])
+    Logger(18, [comm.Get_rank(), time, hamstersToKill[0], currentTask])
+    Logger(19, [comm.Get_rank(), time, hamstersToKill[0]])
     Logger(20, [comm.Get_rank(), time, currentTask])
     comm.send([currentTask, time], dest=0, tag=Tags.KONIEC.value)
     return time
@@ -146,7 +72,6 @@ def takePoisonAndKillHamsters(time, currentTask, hamstersToKill, comm):
 def taskWarLost(comm, LostTasks, currentTask, numberOfConsents, source, time):
     Logger(4, [comm.Get_rank(), time, currentTask, source, numberOfConsents])
     LostTasks.append([currentTask, source])
-    print(LostTasks, flush=True)
     time += 1
     comm.send([currentTask, numberOfConsents + 1, time], dest=source, tag=Tags.ZEZWOLENIA_INNE.value)
     return LostTasks, time
@@ -154,9 +79,8 @@ def taskWarLost(comm, LostTasks, currentTask, numberOfConsents, source, time):
 
 def main():
     status = MPI.Status()
-    sys.stdout.reconfigure(encoding='utf-8')
     numberOfSessions = 2
-    session = 1
+    session = 0
     numberOfSafetyPins = 2
     comm = MPI.COMM_WORLD
     size = comm.Get_size()
@@ -164,25 +88,38 @@ def main():
     # port_mapping = [59607, 59609, 59612, 59614]
     # pydevd_pycharm.settrace('localhost', port=port_mapping[rank], stdoutToServer=True, stderrToServer=True)
     if rank == 0:
+        time = 0
 
-        tasks = generateTasks()
-        doneTasks = 0
-        print(tasks)
-        Logger(0, [rank])
-        sendToAll(comm, rank, size, [tasks, 0], Tags.ZLECENIA.value)
+        while session < numberOfSessions:
 
-        # wait4Answers
+            tasks = generateTasks()
+            doneTasks = 0
+            print(tasks)
+            Logger(0, [rank])
+            sendToAll(comm, rank, size, [tasks, time], Tags.ZLECENIA.value)
 
-        while doneTasks < len(tasks):
-            data = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
-            tag = Tags(status.Get_tag())
-            if tag == Tags.KONIEC:
-                doneTasks += 1
-                Logger(16, [data[0], len(tasks) - doneTasks])
+            while doneTasks < len(tasks):
+                data = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+                time = max(time, data[-1]) + 1
+                Logger(2, [rank, time])
+                tag = Tags(status.Get_tag())
+                if tag == Tags.KONIEC:
+                    doneTasks += 1
+                    tasks[data[0]][1] = True
+                    Logger(16, [data[0],time ,len(tasks) - doneTasks])
+            sendToAll(comm, rank, size, [0, time], Tags.KONIEC_SESJI.value)
+            readyProcesses = 0
+            while readyProcesses < size-1:
+                comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG,status=status)
+                time = max(time, data[-1]) + 1
+                Logger(2, [rank, time])
+                tag = Tags(status.Get_tag())
+                if tag == Tags.KONIEC_SESJI:
+                    readyProcesses+=1
+            session += 1
 
-        sendToAll(comm, rank, size, [0,0], Tags.KONIEC.value)
+        sendToAll(comm, rank, size, [0, time], Tags.KONIEC.value)
 
-        session += 1
     else:
         tasks = None
         currentTask = None
@@ -197,7 +134,10 @@ def main():
 
         while not end:
 
-            data = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+            if tasks is None:
+                data = comm.recv(source=0, tag=MPI.ANY_TAG, status=status)
+            else:
+                data = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
             tag = Tags(status.Get_tag())
             Logger(1, [rank, time, tag.name, status.Get_source(), data[-1]])
 
@@ -242,7 +182,6 @@ def main():
                 else:
                     dest = [x[1] for x in LostTasks if x[0] == data[0]]
                     dest = dest[0]
-                    print('ID:' + str(rank) + ' | ' + str(dest), flush=True)
                     time += 1
                     Logger(10, [rank, time, data[0], dest])
                     comm.send([data[0], 1, time], dest=dest, tag=Tags.ZEZWOLENIA_INNE.value)
@@ -279,6 +218,7 @@ def main():
                 for x in safetyPinRequests:
                     Logger(13, [rank, time, x])
                     comm.send([1, time], dest=x, tag=Tags.AGRAFKA_ZEZWOLENIE.value)
+                safetyPinRequests.clear()
 
                 currentTask, time, numberOfConsents = chooseTask(tasks, time, comm)
                 if currentTask < 0:
@@ -304,7 +244,6 @@ def main():
                     time += 1
                     Logger(10, [rank, time, data[0], dest])
                     comm.send([data[0], data[1], time], dest=dest, tag=Tags.ZEZWOLENIA_INNE.value)
-            # POPRAWIC!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
             elif tag == Tags.ZLECENIA:
                 tasks = data[0]
@@ -314,6 +253,17 @@ def main():
                 timeOfTaskRequest = time
                 tasks[currentTask][1] = True
                 continue
+
+            elif tag == Tags.KONIEC_SESJI:
+                tasks = None
+                currentTask = None
+                LostTasks = []
+                timeOfTaskRequest = 0
+                timeOfSafetyPinRequest = 0
+                numberOfConsents = 0
+                wantSafetyPin = False
+                Logger(21, [rank, time])
+                comm.send([0, time], dest=0, tag=Tags.KONIEC_SESJI.value)
 
             elif tag == Tags.KONIEC:
                 end = True
