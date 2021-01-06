@@ -1,6 +1,7 @@
+
 def Logger(logType, args):
     if logType == 0:
-        print('ID:' + str(args[0]) + ' | 0 | Wyslalem do wszystkich liste zlecen', flush=True)
+        print(' ID:' + str(args[0]) + ' | 0 | Wyslalem do wszystkich liste zlecen ' , flush=True)
     elif logType == 1:
         print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
               ' | Otrzymalem wiadomosc typu: ' + args[2] + ' od procesu ID: '
@@ -57,23 +58,32 @@ def Logger(logType, args):
         print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
               ' | Przesylam zgode na agrafke do procesu o ID ' + str(args[2]), flush=True)
     elif logType == 16:
-        print('ID:0 | '+ str(args[1]) +' | Otrzymalem informacje ze zadanie ' + str(
+        print('ID:0 | ' + str(args[1]) + ' | Otrzymalem informacje ze zadanie ' + str(
             args[0]) + ' zostalo zrealizowane | Pozostalo zadan: ' + str(args[2]), flush=True)
     elif logType == 17:
         print('ID:' + str(args[0]) + ' | ' + str(args[1]) + ' | Nie potrzebuje juz agrafki, wiec ignoruje zezwolenie',
               flush=True)
     elif logType == 18:
         print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Pobieram ' + str(args[2]) + ' sztuk trucizny do zadania nr: '+ str(args[3]),
+              ' | Pobieram ' + str(args[2]) + ' sztuk trucizny do zadania nr: ' + str(args[3]),
               flush=True)
     elif logType == 19:
         print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
               ' | Rozpoczynam zabijanie ' + str(args[2]) + ' chomików',
               flush=True)
     elif logType == 20:
-        print('ID:' + str(args[0]) + ' | ' + str(args[1]) + ' | Zrealizowalem zadanie  nr: '+ str(args[2]),
+        print('ID:' + str(args[0]) + ' | ' + str(args[1]) + ' | Zrealizowalem zadanie  nr: ' + str(args[2]),
               flush=True)
     elif logType == 21:
         print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
               ' | Odsyłam informację o końcu sesji w celu zsynchronizowania procesów',
               flush=True)
+    elif logType == 22:
+        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
+              ' | Brak wolnych zadan', flush=True)
+    elif logType == 23:
+        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
+              ' | Wszystkie zadania zostaly zakonczone | Synchronizacja procesow', flush=True)
+    elif logType == 24:
+        print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
+              ' | Wszystkie chomiki zostaly zabite | Koniec programu', flush=True)
