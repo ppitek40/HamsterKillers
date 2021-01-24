@@ -40,7 +40,7 @@ def chooseTask(tasks, time, comm):
     if False in list(zip(*tasks))[1]:
         number = random.randint(0, len(tasks) - 1)
         if tasks[number][1]:
-            number = list(zip(*tasks))[1].index(False)
+            number = (zip(*tasks))[1].index(False)
         time += 1
         Logger(5, [comm.Get_rank(), time, number, Tags.ZLECENIE_ZAPYTANIE.name])
         sendToAll(comm, comm.Get_rank(), comm.Get_size(), [number, time], Tags.ZLECENIE_ZAPYTANIE.value)
@@ -94,7 +94,7 @@ def getDestinationOfConsent(LostTasks, task):
 
 
 def main():
-    if len(sys.argv) > 6:
+    if len(sys.argv) > 7:
         raise Exception("Too many arguments!")
 
     numberOfSessions, numberOfSafetyPins, minTasks, maxTasks, minHamsters, maxHamsters, = getArgs(sys.argv[1:])
