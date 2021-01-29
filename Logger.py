@@ -31,7 +31,7 @@ def Logger(logType, args):
               ' procesowi o ID: ' + str(args[3]), flush=True)
     elif logType == 8:
         print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
-              ' | Liczba posiadanych zgód ' + str(args[2]), flush=True)
+              ' | Liczba posiadanych zgód ' + str(args[2]) + ' | '+(args[3]), flush=True)
     elif logType == 9:
         print('ID:' + str(args[0]) + ' | ' + str(args[1]) +
               ' | Zdobyłem dostęp do zadania nr ' + str(args[2]) +

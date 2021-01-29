@@ -1,5 +1,6 @@
 import random
 import sys
+from time import sleep
 
 from Logger import Logger
 
@@ -7,7 +8,7 @@ from enum import Enum
 from mpi4py import MPI
 
 
-# import pydevd_pycharm
+import pydevd_pycharm
 
 
 class Tags(Enum):
@@ -53,7 +54,7 @@ def chooseTask(tasks, time, comm):
 
 def war(myTime, oponnentTime, myID, oponnentID):
     if myTime != oponnentTime:
-        return True if myTime > oponnentTime else False
+        return True if myTime < oponnentTime else False
     return True if myID < oponnentID else False
 
 
@@ -68,6 +69,7 @@ def takePoisonAndKillHamsters(time, currentTask, hamstersToKill, comm):
     Logger(18, [comm.Get_rank(), time, hamstersToKill[0], currentTask])
     Logger(19, [comm.Get_rank(), time, hamstersToKill[0]])
     Logger(20, [comm.Get_rank(), time, currentTask])
+    sleep(1)
     comm.send([currentTask, time], dest=0, tag=Tags.KONIEC.value)
     return time
 
@@ -99,13 +101,12 @@ def main():
 
     numberOfSessions, numberOfSafetyPins, minTasks, maxTasks, minHamsters, maxHamsters, = getArgs(sys.argv[1:])
     session = 0
-
     status = MPI.Status()
     comm = MPI.COMM_WORLD
     size = comm.Get_size()
     rank = comm.Get_rank()
-    # port_mapping = [59607, 59609, 59612, 59614]
-    # pydevd_pycharm.settrace('localhost', port=port_mapping[rank], stdoutToServer=True, stderrToServer=True)
+    port_mapping = [53662, 53664, 53665, 53666]
+    pydevd_pycharm.settrace('localhost', port=port_mapping[rank], stdoutToServer=True, stderrToServer=True)
     if rank == 0:
         time = 0
         while session < numberOfSessions:
@@ -188,7 +189,7 @@ def main():
                 if data[0] == currentTask:
                     numberOfConsents += 1
                     if numberOfConsents < size - 2:
-                        Logger(8, [rank, time, numberOfConsents])
+                        Logger(8, [rank, time, numberOfConsents, tag.name])
                         continue
                     else:
                         wantSafetyPin = True
@@ -221,7 +222,7 @@ def main():
                     continue
                 numberOfConsents += 1
                 if numberOfConsents < (size - 1) - numberOfSafetyPins:
-                    Logger(8, [rank, time, numberOfConsents])
+                    Logger(8, [rank, time, numberOfConsents, tag.name])
                     continue
                 Logger(14, [rank, time])
                 wantSafetyPin = False
@@ -244,7 +245,7 @@ def main():
                 if data[0] == currentTask:
                     numberOfConsents += data[1]
                     if numberOfConsents < size - 2:
-                        Logger(8, [rank, time, numberOfConsents])
+                        Logger(8, [rank, time, numberOfConsents, tag.name])
                         continue
                     else:
                         wantSafetyPin = True
